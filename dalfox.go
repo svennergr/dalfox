@@ -4,7 +4,7 @@ Happy hacking :D
 */
 package main
 
-import "github.com/hahwul/dalfox/v2/cmd"
+import "github.com/svennergr/dalfox/v2/cmd"
 
 func main() {
 	cmd.Execute()
