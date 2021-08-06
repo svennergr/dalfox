@@ -464,7 +464,7 @@ func Scan(target string, options model.Options, sid string) (model.Result, error
 						if customPayload != "" {
 							for k, _ := range params {
 								// Add plain XSS Query
-								tq, tm := optimization.MakeRequestQuery(target, k, customPayload, "toHTML", "toAppend", "NaN", options)
+								tq, tm := optimization.MakeRequestQuery(target, k, customPayload, "inHTML", "toAppend", "NaN", options)
 								query[tq] = tm
 								// Add URL encoded XSS Query
 								etq, etm := optimization.MakeRequestQuery(target, k, customPayload, "inHTML", "toAppend", "urlEncode", options)
@@ -491,7 +491,7 @@ func Scan(target string, options model.Options, sid string) (model.Result, error
 					if customPayload != "" {
 						for k, _ := range params {
 							// Add plain XSS Query
-							tq, tm := optimization.MakeRequestQuery(target, k, customPayload, "toHTML", "toAppend", "NaN", options)
+							tq, tm := optimization.MakeRequestQuery(target, k, customPayload, "inHTML", "toAppend", "NaN", options)
 							query[tq] = tm
 							// Add URL encoded XSS Query
 							etq, etm := optimization.MakeRequestQuery(target, k, customPayload, "inHTML", "toAppend", "urlEncode", options)
@@ -1116,7 +1116,7 @@ func ParameterAnalysis(target string, options model.Options, rl *rateLimiter) ma
 					})
 					doc.Find("form").Each(func(i int, s *goquery.Selection) {
 						action, _ := s.Attr("action")
-						if (strings.HasPrefix(action, "/") || strings.HasPrefix(action, "?")) { // assuming this is a relative URL
+						if strings.HasPrefix(action, "/") || strings.HasPrefix(action, "?") { // assuming this is a relative URL
 							url, _ := url.Parse(action)
 							query := url.Query()
 							for aParam := range query {
@@ -1125,12 +1125,12 @@ func ParameterAnalysis(target string, options model.Options, rl *rateLimiter) ma
 									count = count + 1
 								}
 							}
-							
+
 						}
 					})
 					doc.Find("a").Each(func(i int, s *goquery.Selection) {
 						href, _ := s.Attr("href")
-						if (strings.HasPrefix(href, "/") || strings.HasPrefix(href, "?")) { // assuming this is a relative URL
+						if strings.HasPrefix(href, "/") || strings.HasPrefix(href, "?") { // assuming this is a relative URL
 							url, _ := url.Parse(href)
 							query := url.Query()
 							for aParam := range query {
@@ -1139,7 +1139,7 @@ func ParameterAnalysis(target string, options model.Options, rl *rateLimiter) ma
 									count = count + 1
 								}
 							}
-							
+
 						}
 					})
 					printing.DalLog("INFO", "Found "+strconv.Itoa(count)+" testing point in DOM base parameter mining", options)
@@ -1484,10 +1484,11 @@ func duplicatedResult(result []model.Issue, rst model.Issue) bool {
 
 func containsFromArray(slice []string, item string) bool {
 	set := make(map[string]struct{}, len(slice))
-	t := strings.Split(item, "(")
+	t := strings.Split(item, "-")
 	i := t[0]
 	for _, s := range slice {
-		set[s] = struct{}{}
+		sk := strings.Split(s, "-")[0]
+		set[sk] = struct{}{}
 	}
 
 	_, ok := set[i]
